@@ -1,23 +1,32 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // Импортируем хук
 
 export const Auth: React.FC = () => {
-  // Состояние: true — регистрация, false — вход
-  const [isRegister, setIsRegister] = useState<boolean>(true);
+  const navigate = useNavigate();
+  const { login } = useAuth(); // Забираем метод login из контекста
 
-  // Состояния для полей ввода
+  const [isRegister, setIsRegister] = useState<boolean>(true);
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isRegister) {
-      console.log('Регистрация:', { email, password, confirmPassword });
-      // Здесь будет запрос к бэкенду POST /api/v1/auth/register
-    } else {
-      console.log('Вход:', { email, password });
-      // Здесь будет запрос к бэкенду POST /api/v1/auth/login
+    
+    if (isRegister && password !== confirmPassword) {
+      alert("Пароли не совпадают!");
+      return;
     }
+
+    // Имитируем успешный ответ бэкенда с выдачей JWT токена
+    const mockToken = "fake-jwt-token-from-fastapi";
+    
+    // Вызываем глобальный login
+    login(mockToken, email);
+    
+    alert(isRegister ? "Успешная регистрация!" : "Успешный вход!");
+    navigate('/profile'); // Перенаправляем в личный кабинет
   };
 
   return (
