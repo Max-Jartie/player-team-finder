@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 
 interface PlayerApplication {
   id: number;
@@ -15,9 +15,11 @@ interface PlayerApplication {
 
 export const Applications: React.FC = () => {
   const { gameSlug } = useParams<{ gameSlug: string }>();
+  const navigate = useNavigate();
 
 
   const [ageFrom, setAgeFrom] = useState<string>('');
+  const [ageTo, setAgeTo] = useState<string>('');
   const [gender, setGender] = useState<string>('');
   const [country, setCountry] = useState<string>('');
 
@@ -92,16 +94,20 @@ export const Applications: React.FC = () => {
 
   // Многоуровневая фильтрация массива данных
   const filteredApplications = allApplications.filter((app) => {
-    //фильтрация по игре из URL адреса
     if (app.game !== gameSlug) return false;
-
-    //Фильтрация по минимальному возрасту (если введен)
-    if (ageFrom && app.age < parseInt(ageFrom)) return false;
-
-    //Фильтрация по полу (если выбран)
+    if (ageFrom) {
+      const parsedAgeFrom = parseInt(ageFrom);
+      if (!isNaN(parsedAgeFrom) && parsedAgeFrom > 10) {
+        if (app.age < parsedAgeFrom) return false;
+      }
+    }
+    if (ageTo) {
+      const parsedAgeTo = parseInt(ageTo);
+      if (!isNaN(parsedAgeTo) && parsedAgeTo > 10) {
+        if (app.age > parsedAgeTo) return false;
+      }
+    }
     if (gender && app.gender !== gender) return false;
-
-    //Фильтрация по стране (если выбрана)
     if (country && app.country !== country) return false;
 
     return true;
@@ -109,6 +115,7 @@ export const Applications: React.FC = () => {
 
   const handleReset = () => {
     setAgeFrom('');
+    setAgeTo('');
     setGender('');
     setCountry('');
   };
@@ -129,21 +136,34 @@ export const Applications: React.FC = () => {
               Сбросить
             </button>
           </div>
-
           <div className="space-y-5">
+            {/* Блок фильтрации по возрасту (ОТ / ДО) */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
-                Минимальный возраст
+                Возраст игрока
               </label>
-              <input
-                type="number"
-                value={ageFrom}
-                onChange={(e) => setAgeFrom(e.target.value)}
-                placeholder="Например: 18"
-                className="w-full bg-[#12161a] border border-gray-800 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-csorange transition-colors"
-              />
-            </div>
+              <div className="grid grid-cols-2 gap-2">
 
+                <div>
+                  <input
+                    type="number"
+                    value={ageFrom}
+                    onChange={(e) => setAgeFrom(e.target.value)}
+                    placeholder="От"
+                    className="w-full bg-[#12161a] border border-gray-800 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-csorange transition-colors"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="number"
+                    value={ageTo}
+                    onChange={(e) => setAgeTo(e.target.value)}
+                    placeholder="До"
+                    className="w-full bg-[#12161a] border border-gray-800 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-csorange transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
                 Пол игрока
@@ -190,7 +210,11 @@ export const Applications: React.FC = () => {
           {filteredApplications.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredApplications.map((app) => (
-                <div key={app.id} className="bg-csdark p-5 rounded-lg border border-gray-800 flex flex-col justify-between hover:border-gray-700 transition-colors">
+                <div 
+                key={app.id} 
+                onClick={() => navigate(`/applications/${app.id}`)}
+                className="bg-csdark p-5 rounded-lg border border-gray-800 flex flex-col justify-between hover:border-csorange cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5"
+              >
                   <div>
                     <div className="flex justify-between items-start mb-3">
                       <h3 className="text-lg font-bold text-white tracking-wide">{app.nickname}</h3>
@@ -198,7 +222,7 @@ export const Applications: React.FC = () => {
                         {app.game}
                       </span>
                     </div>
-                    <p className="text-gray-400 text-sm leading-relaxed mb-4">
+                    <p className="text-gray-400 text-sm leading-relaxed mb-4 line-clamp-2 min-h-[40px]">
                       {app.description}
                     </p>
                   </div>

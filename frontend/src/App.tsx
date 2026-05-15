@@ -7,6 +7,7 @@ import { Applications } from './pages/Applications';
 import { Auth } from './pages/Auth';
 import { Profile } from './pages/Profile';
 import { CreateApplication } from './pages/CreateApplication';
+import { ApplicationDetail } from './pages/ApplicationDetail';
 
 const Navigation: React.FC = () => {
   const { isLoggedIn, user, logout } = useAuth();
@@ -59,6 +60,7 @@ const App: React.FC = () => {
             <Route path="/auth" element={<Auth />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/create" element={<CreateApplication />} />
+            <Route path="/applications/:id" element={<ApplicationDetail />} />
           </Routes>
         </main>
       </BrowserRouter>
