@@ -24,13 +24,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // При первом запуске проверяем, есть ли сохраненный токен
   useEffect(() => {
     if (token) {
-      // В будущем здесь будет запрос к бэкенду GET /api/v1/profile для получения актуального никнейма
+      // В будущем здесь будет запрос к бэкенду
       const savedEmail = localStorage.getItem('user_email') || '';
       setUser({ email: savedEmail, nickname: savedEmail.split('@')[0] });
     }
   }, [token]);
 
-  // Функция входа (вызывается при успешном ответе от FastAPI)
+  // Функция входа
   const login = (newToken: string, email: string) => {
     localStorage.setItem('token', newToken);
     localStorage.setItem('user_email', email);
@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser({ email, nickname: email.split('@')[0] });
   };
 
-  // Функция выхода (очищает хранилище)
+  // Функция выхода
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user_email');
@@ -55,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-// Кастомный хук для удобного использования контекста в компонентах
+// Кастомный хук
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

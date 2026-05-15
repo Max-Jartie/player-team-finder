@@ -20,27 +20,41 @@ export const CreateApplication: React.FC = () => {
   
   // Поля для динамического JSONB блока
   const [csstatsUrl, setCsstatsUrl] = useState<string>('');
+  const [error, setError] = useState<string>('');
 
+
+  {error && <div className="text-red-500 text-xs bg-red-950/50 border border-red-900 p-2 rounded text-center mb-2">{error}</div>}
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
 
-    // данные под бэкенд и СУБД PostgreSQL (JSONB)
+    if (gameNickname.trim().length < 1) {
+      setError('Игровой никнейм не может быть пустым');
+      return;
+    }
+
+    if (selectedGame === 'cs2') {
+      const csstatsRegex = /^https?:\/\/(www\.)?csstats\.gg\/player\/\d+/;
+      if (!csstatsRegex.test(csstatsUrl)) {
+        setError('Введите корректную ссылку на профиль csstats.gg (например: https://csstats.gg...)');
+        return;
+      }
+    }
+
+    // Формируем payload
     const payload = {
       game_slug: selectedGame,
       description: description,
-      auto_profile_data: {
-        age: userProfileFromDB.age,
-        gender: userProfileFromDB.gender,
-        country: userProfileFromDB.country
-      },
       game_specific_data: {
         ingame_nickname: gameNickname,
         ...(selectedGame === 'cs2' && { csstats_url: csstatsUrl })
       }
     };
 
-    console.log('Отправка заявки на бэкенд (FastAPI):', payload);
-    alert(`Заявка для игры ${selectedGame.toUpperCase()} успешно создана! (симуляция)`);
+    console.log('Отправка через настроенный Axios клиент:', payload);
+    // Отправка через настроенный Axios клиент: api.post('/applications', payload);
+
+    alert('Заявка отправлена!');
     navigate(`/games/${selectedGame}`);
   };
 
@@ -143,7 +157,7 @@ export const CreateApplication: React.FC = () => {
         {/* Кнопка отправки формы */}
         <button
           type="submit"
-          className="w-full bg-csorange text-black font-bold py-2.5 px-4 rounded mt-2 hover:bg-opacity-90 transition-colors uppercase tracking-wider text-sm"
+          className="w-full bg-csorange text-white font-bold py-2.5 px-4 rounded mt-2 hover:bg-opacity-90 transition-colors uppercase tracking-wider text-sm"
         >
           Опубликовать объявление
         </button>

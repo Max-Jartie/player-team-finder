@@ -176,7 +176,7 @@ export const Profile: React.FC = () => {
         {/* Кнопка отправки формы */}
         <button
           type="submit"
-          className="w-full bg-csorange text-black font-bold py-2.5 px-4 rounded mt-4 hover:bg-opacity-90 transition-colors uppercase tracking-wider text-sm"
+          className="w-full bg-csorange text-white font-bold py-2.5 px-4 rounded mt-4 hover:bg-opacity-90 transition-colors uppercase tracking-wider text-sm"
         >
           Сохранить изменения
         </button>

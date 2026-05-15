@@ -1,32 +1,54 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // Импортируем хук
+import { useAuth } from '../context/AuthContext';
 
 export const Auth: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth(); // Забираем метод login из контекста
+  const { login } = useAuth();
 
   const [isRegister, setIsRegister] = useState<boolean>(true);
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [error, setError] = useState<string>('');
+ 
+  {error && <div className="text-red-500 text-xs bg-red-950/50 border border-red-900 p-2 rounded text-center mb-2">{error}</div>}
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (isRegister && password !== confirmPassword) {
-      alert("Пароли не совпадают!");
+    setError('');
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Введите корректный адрес электронной почты.');
       return;
     }
 
-    // Имитируем успешный ответ бэкенда с выдачей JWT токена
-    const mockToken = "fake-jwt-token-from-fastapi";
-    
-    // Вызываем глобальный login
-    login(mockToken, email);
-    
-    alert(isRegister ? "Успешная регистрация!" : "Успешный вход!");
-    navigate('/profile'); // Перенаправляем в личный кабинет
+    if (password.length < 8) {
+      setError('Пароль должен содержать не менее 8 символов.');
+      return;
+    }
+
+    if (isRegister && password !== confirmPassword) {
+      setError('Пароли не совпадают.');
+      return;
+    }
+
+    try {
+      if (isRegister) {
+        // await api.post('/auth/register', { email, password });
+        login('fake-jwt-token', email);
+        alert('Успешная регистрация!');
+      } else {
+        // const response = await api.post('/auth/login', { email, password });
+        // login(response.data.access_token, email);
+        login('fake-jwt-token', email);
+        alert('Успешный вход!');
+      }
+      navigate('/profile');
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Произошла сетевая ошибка.');
+    }
   };
 
   return (

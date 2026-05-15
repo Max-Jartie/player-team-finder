@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 
-// Описываем структуру данных для карточки игрока
 interface PlayerApplication {
   id: number;
   nickname: string;
@@ -15,15 +14,13 @@ interface PlayerApplication {
 }
 
 export const Applications: React.FC = () => {
-  // Получаем slug игры из URL
   const { gameSlug } = useParams<{ gameSlug: string }>();
 
-  // Состояния для боковых фильтров
+
   const [ageFrom, setAgeFrom] = useState<string>('');
   const [gender, setGender] = useState<string>('');
   const [country, setCountry] = useState<string>('');
 
-  // Временная база данных заявок для всех игр
   const allApplications: PlayerApplication[] = [
     {
       id: 1,
