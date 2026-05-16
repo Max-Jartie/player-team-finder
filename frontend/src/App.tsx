@@ -2,12 +2,14 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ProtectedAdminRoute } from './components/ProtectedAdminRoute';
 import { Games } from './pages/Games';
 import { Applications } from './pages/Applications';
 import { Auth } from './pages/Auth';
 import { Profile } from './pages/Profile';
 import { CreateApplication } from './pages/CreateApplication';
 import { ApplicationDetail } from './pages/ApplicationDetail';
+import { AdminPanel } from './pages/AdminPanel';
 
 const Navigation: React.FC = () => {
   const { isLoggedIn, user, logout } = useAuth();
@@ -18,21 +20,35 @@ const Navigation: React.FC = () => {
       <Link to="/" className="text-xl font-bold text-csorange tracking-wider">
         TEAM.FINDER
       </Link>
-      
+
       <div className="space-x-6 text-sm font-medium flex items-center">
-        <Link to="/" className="hover:text-csorange transition-colors">Игры</Link>
-        <Link to="/create" className="hover:text-csorange transition-colors">Создать заявку</Link>
-        
+        <Link to="/" className="hover:text-csorange transition-colors">
+          Игры
+        </Link>
+        <Link to="/create" className="hover:text-csorange transition-colors">
+          Создать заявку
+        </Link>
+
         {isLoggedIn ? (
           <div className="flex items-center gap-4">
+            {user?.is_admin && (
+              <Link
+                to="/admin"
+                className="text-csorange hover:underline font-semibold transition-colors"
+              >
+                ⚙️ Админка
+              </Link>
+            )}
             <button
+              type="button"
               onClick={() => navigate('/profile')}
               className="flex items-center gap-2 text-gray-200 font-semibold bg-[#12161a] border border-gray-800 px-3 py-1.5 rounded hover:border-csorange hover:text-csorange transition-all cursor-pointer"
             >
               <span>👤 Профиль</span>
             </button>
-            
-            <button 
+
+            <button
+              type="button"
               onClick={logout}
               className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
             >
@@ -40,7 +56,10 @@ const Navigation: React.FC = () => {
             </button>
           </div>
         ) : (
-          <Link to="/auth" className="bg-csorange text-black px-4 py-2 rounded font-bold hover:bg-opacity-90 transition-colors">
+          <Link
+            to="/auth"
+            className="bg-csorange text-white px-4 py-2 rounded font-bold hover:bg-opacity-90 transition-colors"
+          >
             Войти
           </Link>
         )}
@@ -48,6 +67,7 @@ const Navigation: React.FC = () => {
     </nav>
   );
 };
+
 const App: React.FC = () => {
   return (
     <AuthProvider>
@@ -61,6 +81,14 @@ const App: React.FC = () => {
             <Route path="/profile" element={<Profile />} />
             <Route path="/create" element={<CreateApplication />} />
             <Route path="/applications/:id" element={<ApplicationDetail />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedAdminRoute>
+                  <AdminPanel />
+                </ProtectedAdminRoute>
+              }
+            />
           </Routes>
         </main>
       </BrowserRouter>

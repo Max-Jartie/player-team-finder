@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { parseJwtPayload } from '../services/parseJwt';
 
-// Описываем структуру данных пользователя
-interface UserData {
+export interface UserData {
+  id: number;
   email: string;
   nickname?: string;
+  is_admin: boolean;
 }
 
-// Описываем структуру самого контекста
 interface AuthContextType {
   isLoggedIn: boolean;
   user: UserData | null;
@@ -17,31 +18,45 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const buildUserFromToken = (token: string, email: string): UserData => {
+  const { user_id, is_admin } = parseJwtPayload(token);
+  const storedId = localStorage.getItem('user_id');
+  const storedAdmin = localStorage.getItem('is_admin') === 'true';
+  const id = user_id ?? (storedId ? parseInt(storedId, 10) : 0);
+  return {
+    id,
+    email,
+    nickname: email.split('@')[0],
+    is_admin: is_admin || storedAdmin,
+  };
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [user, setUser] = useState<UserData | null>(null);
 
-  // При первом запуске проверяем, есть ли сохраненный токен
   useEffect(() => {
     if (token) {
-      // В будущем здесь будет запрос к бэкенду
       const savedEmail = localStorage.getItem('user_email') || '';
-      setUser({ email: savedEmail, nickname: savedEmail.split('@')[0] });
+      setUser(buildUserFromToken(token, savedEmail));
     }
   }, [token]);
 
-  // Функция входа
   const login = (newToken: string, email: string) => {
+    const { user_id, is_admin } = parseJwtPayload(newToken);
     localStorage.setItem('token', newToken);
     localStorage.setItem('user_email', email);
+    if (user_id !== null) localStorage.setItem('user_id', String(user_id));
+    localStorage.setItem('is_admin', String(is_admin));
     setToken(newToken);
-    setUser({ email, nickname: email.split('@')[0] });
+    setUser(buildUserFromToken(newToken, email));
   };
 
-  // Функция выхода
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user_email');
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('is_admin');
     setToken(null);
     setUser(null);
   };
@@ -55,7 +70,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-// Кастомный хук
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
