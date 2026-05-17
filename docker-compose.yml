@@ -22,9 +22,9 @@ services:
     container_name: player-team-finder-backend
     restart: unless-stopped
     environment:
-        SECRET_KEY: "KGHDFASUYG:FUIA:SFPO@&!KDFJ"
+        SECRET_KEY: "change_me_in_production"
         DATABASE_URL: "postgresql://postgres:postgres@db:5432/team_finder"
-        CORS_ORIGINS: "http://SERVER_IP,http://localhost:5173,http://127.0.0.1:5173"
+        CORS_ORIGINS: "http://176.108.254.224,http://localhost:5173,http://127.0.0.1:5173"
     expose:
       - "8000"
     depends_on:
