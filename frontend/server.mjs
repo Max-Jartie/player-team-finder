@@ -40,7 +40,7 @@ function sendFile(res, filePath) {
     .pipe(res);
 }
 
-function proxyApi(req, res) {
+function proxyBackend(req, res) {
   const target = new URL(req.url, INTERNAL_API_URL);
 
   const proxyReq = http.request(
@@ -69,8 +69,8 @@ function proxyApi(req, res) {
 const server = http.createServer((req, res) => {
   const requestUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
 
-  if (requestUrl.pathname.startsWith('/api/')) {
-    proxyApi(req, res);
+  if (requestUrl.pathname.startsWith('/api/') || requestUrl.pathname === '/health') {
+    proxyBackend(req, res);
     return;
   }
 
@@ -88,5 +88,5 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, HOST, () => {
   console.log(`Frontend is available on http://${HOST}:${PORT}`);
-  console.log(`Proxying /api/* to ${INTERNAL_API_URL}`);
+  console.log(`Proxying /api/* and /health to ${INTERNAL_API_URL}`);
 });
