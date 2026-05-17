@@ -1,5 +1,3 @@
-import os
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -8,6 +6,7 @@ from app.api.profile import router as profile_router
 from app.api.applications import router as applications_router
 from app.api.games import router as games_router
 from app.api.admin import router as admin_router
+from app.core.config import settings
 
 
 app = FastAPI(
@@ -16,14 +15,9 @@ app = FastAPI(
     version="1.0.0",
 )
 
-origins = os.getenv(
-    "CORS_ORIGINS",
-    "http://localhost:5173,http://127.0.0.1:5173",
-).split(",")
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in origins],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,3 +36,9 @@ async def root():
         "status": "success",
         "message": "Добро пожаловать на Team Finder API! Сервер успешно запущен.",
     }
+
+
+@app.get("/health", tags=["Health"])
+@app.get("/api/v1/health", tags=["Health"])
+async def health_check():
+    return {"status": "ok"}
