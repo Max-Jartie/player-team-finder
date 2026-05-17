@@ -7,6 +7,25 @@
 - `backend/` — FastAPI API, SQLAlchemy, Alembic, PostgreSQL.
 - `frontend/` — React + Vite клиент.
 
+## Схема деплоя с одним внешним портом 5173
+
+Если снаружи открыт только порт `5173`, backend не нужно открывать наружу. Он может работать внутри сервера на `127.0.0.1:8000`, а frontend на `0.0.0.0:5173` будет:
+
+- отдавать React-приложение;
+- проксировать `/api/*` во внутренний backend.
+
+Внешний адрес приложения:
+
+```text
+http://176.108.254.224:5173/
+```
+
+Внешний адрес API через frontend-прокси:
+
+```text
+http://176.108.254.224:5173/api/v1
+```
+
 ## Локальный запуск backend
 
 ```bash
@@ -16,12 +35,12 @@ pip install -r requirements.txt
 cp backend/.env.example backend/.env
 cd backend
 alembic upgrade head
-uvicorn app.main:app --reload
+uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-API будет доступен на `http://localhost:8000`, Swagger — на `http://localhost:8000/docs`.
+API будет доступен внутри машины на `http://127.0.0.1:8000`, Swagger — на `http://127.0.0.1:8000/docs`.
 
-## Локальный запуск frontend
+## Локальный запуск frontend в dev-режиме
 
 ```bash
 cd frontend
@@ -29,39 +48,63 @@ npm install
 npm run dev
 ```
 
-По умолчанию Vite проксирует `/api` на `http://localhost:8000`, поэтому локально можно не задавать `VITE_API_URL`.
+Vite будет слушать `0.0.0.0:5173` и проксировать `/api` на `http://127.0.0.1:8000`.
 
-## Деплой backend
+## Production-запуск frontend на единственном внешнем порту
 
-Для Render/Railway/аналогичной PaaS-платформы укажи:
+```bash
+cd frontend
+npm ci
+npm run build
+npm run serve
+```
 
-- Root Directory: `backend`
-- Build Command: `pip install -r ../requirements.txt`
-- Start Command: `bash start.sh`
+Переменные окружения frontend:
+
+```env
+VITE_API_URL=/api/v1
+INTERNAL_API_URL=http://127.0.0.1:8000
+FRONTEND_HOST=0.0.0.0
+FRONTEND_PORT=5173
+```
+
+`frontend/server.mjs` отдаёт папку `dist` и проксирует `/api/*` на `INTERNAL_API_URL`.
+
+## Production-запуск backend
+
+```bash
+cd backend
+pip install -r ../requirements.txt
+bash start.sh
+```
 
 Переменные окружения backend:
 
 ```env
 SECRET_KEY=your-production-secret
 DATABASE_URL=postgresql://user:password@host:5432/dbname
-CORS_ORIGINS=https://your-frontend-domain.example
+CORS_ORIGINS=http://176.108.254.224:5173,http://localhost:5173,http://127.0.0.1:5173
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 ```
 
-`start.sh` сначала выполняет `alembic upgrade head`, затем запускает `uvicorn` на порту из переменной `$PORT`.
+`start.sh` сначала выполняет `alembic upgrade head`, затем запускает `uvicorn` на порту из переменной `$PORT`, по умолчанию `8000`.
 
-## Деплой frontend
+## Проверка после запуска
 
-Для статического деплоя укажи:
+Фронтенд:
 
-- Root Directory: `frontend`
-- Build Command: `npm ci && npm run build`
-- Publish Directory: `dist`
-
-Переменная окружения frontend:
-
-```env
-VITE_API_URL=https://your-backend-domain.example/api/v1
+```text
+http://176.108.254.224:5173/
 ```
 
-После изменения `VITE_API_URL` фронтенд нужно пересобрать, потому что переменные `VITE_*` подставляются на этапе сборки.
+Health-check backend через frontend-прокси:
+
+```text
+http://176.108.254.224:5173/health
+```
+
+API через frontend-прокси:
+
+```text
+http://176.108.254.224:5173/api/v1/games/
+```
